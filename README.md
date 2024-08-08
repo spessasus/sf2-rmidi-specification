@@ -1,19 +1,24 @@
 # Official SF2 RMIDI Specification
+Original format idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), further expanded by spessasus.
+Specification written by spessasus with the help of Zoltán.
 
 ## Preamble
-MIDI files have long-faced a significant challenge: **different sounds on different devices.**
 
-SF2 + MIDI combinations address this issue partially by ensuring that playing both files through an SF2-compliant synth results in the same sound being produced. 
+<p align="justify">
+MIDI files have long-faced a significant challenge: <strong>different sounds on different devices.</strong>
+SF2 + MIDI combinations address this issue partially
+by ensuring that playing both files through an SF2-compliant synth results in the same sound being produced. 
 The RMIDI format is not new; it was originally developed by Microsoft as a RIFF wrapper for MIDI files and later expanded by the MIDI Manufacturers Association to support embedding DLS soundfonts.
 However, DLS is not widely used today, whereas the SoundFont2 (SF2) format serves a similar purpose and remains quite popular.
-
 The SF2 RMIDI format integrates MIDI and SF2 files into a single file, augmented with additional metadata. 
 This document serves as the official specification for this format.
+This version of RMIDI was created by Zoltán Bacskó of <a href="https://falcosoft.hu">Falcosoft</a>
+and implemented in <a href="https://falcosoft.hu/softwares.html#midiplayer">Falcosoft SoundFont Midi Player 6.</a> 
+I am in contact with Zoltán,
+who <a href="https://www.vogons.org/viewtopic.php?p=1282710#p1282710">granted permission</a> to use this as the official specification. 
 
-This version of RMIDI was created by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu) and implemented in [Falcosoft SoundFont Midi Player 6](https://falcosoft.hu/softwares.html#midiplayer). 
-I am in contact with Zoltán, who [granted permission](https://www.vogons.org/viewtopic.php?p=1282710#p1282710) to use this as the official specification.
-
-If you find any part of this specification unclear, please reach out via [this thread](https://www.vogons.org/viewtopic.php?p=1281224) or file a [GitHub issue](https://github.com/spessasus/sf2-rmidi-specification/issues/new) in this repository.
+If you find any part of this specification unclear, please reach out via <a href="https://www.vogons.org/viewtopic.php?p=1281224">this thread</a> or file a <a href="https://github.com/spessasus/sf2-rmidi-specification/issues/new">GitHub issue</a> in this repository.
+</p>
 
 ## Table of Contents
 <!-- TOC -->
