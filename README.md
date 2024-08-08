@@ -2,6 +2,7 @@
 Original format idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), further expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
+Version 1.11
 ## Preamble
 
 <p align="justify">
