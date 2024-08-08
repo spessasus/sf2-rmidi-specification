@@ -27,6 +27,7 @@ If you find any part of this specification unclear, please reach out via [this t
     * [RMID File Structure](#rmid-file-structure)
       * [Handling Differences](#handling-differences)
     * [INFO Chunk](#info-chunk)
+    * [Metadata Chunks](#metadata-chunks)
       * [Chunk Rules](#chunk-rules)
     * [IENC Chunk Requirements](#ienc-chunk-requirements)
     * [IPIC Chunk Requirements](#ipic-chunk-requirements)
@@ -114,7 +115,16 @@ The INFO chunk describes file metadata and the soundfont's bank offset and follo
 
 The INFO chunk may contain the following optional chunks:
 - `DBNK` chunk: Soundfont's bank offset. See [DBNK Chunk](#dbnk-chunk) for details.
-- `INAM` chunk: Song name. Ideally matches the MIDI file name but is not required.
+- `IENC` chunk: Encoding used for the metadata chunks, string.
+  Not case-sensitive, but lowercase is preferred (e.g., `utf-8`).
+  [Software capable of reading the IENC chunk must support the following encodings](#ienc-chunk-requirements).
+  Note that this field must use basic `ASCII` encoding.
+- `MENC` chunk: Encoding hint for the MIDI file itself (the text events). The same string format as `IENC`.
+- [Metadata chunks](#metadata-chunks)
+
+### Metadata Chunks
+Below are the defined chunks containing additional information about the song:
+- `INAM` chunk: Song name.
 - `ICOP` chunk: Copyright. String of any length.
 - `IART` chunk: Artist (MIDI creator). String of any length.
 - `ICRD` chunk: Creation date. String of any length.
@@ -124,17 +134,16 @@ The INFO chunk may contain the following optional chunks:
 - `ICMT` chunk: Comment/description. String of any length.
 - `IENG` chunk: Engineer (soundfont creator). String of any length.
 - `ISFT` chunk: Software used to create the file. String of any length.
-- `IENC` chunk: Encoding used for other INFO chunks, string.
-Not case-sensitive, but lowercase is preferred (e.g., `utf-8`). [Software capable of reading the IENC chunk must support the following encodings](#ienc-chunk-requirements). Note that this field must use basic `ASCII` encoding.
 
 #### Chunk Rules
 The following rules apply to the INFO chunk:
 1. The order of chunks in INFO is arbitrary.
 2. Chunks of length 0 should be discarded.
 3. Unknown INFO chunks should be ignored and preserved as-is.
-4. If the `IENC` chunk is not specified, software can use any encoding, but assuming `utf-8` is recommended.
-5. If the software can display the song's name, it should use either the track name in MIDI or the INAM chunk, preferring the INAM chunk.
-6. Compatible software may ignore all INFO chunks **except the DBNK chunk** to remain compliant.
+4. If the `IENC` chunk is not specified, the software can use any encoding, but assuming `utf-8` is recommended.
+5. If the `MENC` chunk is not specified, the software may try to automatically detect the MIDI encoding or let the user choose.
+6. If the software can display the song's name, it should use either the track name in MIDI or the INAM chunk, preferring the INAM chunk.
+7. Compatible software may ignore all INFO chunks **except the DBNK chunk** to remain compliant.
 
 ### IENC Chunk Requirements
 For Level 3 compatibility, software must support the following encodings (both lowercase and uppercase):
@@ -243,7 +252,9 @@ The following recommendations are not required for file validity but are advised
 2. Ensure the MIDI file references used banks and programs to avoid undefined behavior from missing presets.
 3. Always include the DBNK chunk, even if the offset is 1.
 4. Include the IENC chunk to ensure correct encoding is used.
-5. Omit metadata chunks rather than writing them with a length of 0 if not applicable.
+5. Include the MENC chunk if the encoding is known, to help other software read the MIDI text events correctly.
+6. Use the `utf-8` encoding for the metadata chunks.
+7. Omit metadata chunks rather than writing them with a length of 0 if not applicable.
 
 ### Example Files
 The directory [examples](examples) contains RMIDI Files for testing.
