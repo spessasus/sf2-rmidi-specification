@@ -20,34 +20,32 @@ If you find any part of this specification unclear, please reach out via [this t
 * [Official SF2 RMIDI Specification](#official-sf2-rmidi-specification)
   * [Preamble](#preamble)
   * [Table of Contents](#table-of-contents)
-  * [Specification](#specification)
-    * [Terminology](#terminology)
-    * [Extension](#extension)
-    * [RIFF Chunk](#riff-chunk)
-    * [RMID File Structure](#rmid-file-structure)
-      * [Handling Differences](#handling-differences)
-    * [INFO Chunk](#info-chunk)
+  * [Terminology](#terminology)
+  * [Extension](#extension)
+  * [RIFF Chunk](#riff-chunk)
+* [SF2 RMIDI File Specification](#sf2-rmidi-file-specification)
+    * [Handling Differences](#handling-differences)
+  * [INFO Chunk](#info-chunk)
     * [Metadata Chunks](#metadata-chunks)
-      * [Chunk Rules](#chunk-rules)
-    * [IENC Chunk Requirements](#ienc-chunk-requirements)
-    * [IPIC Chunk Requirements](#ipic-chunk-requirements)
-    * [DBNK Chunk](#dbnk-chunk)
-      * [Bank Offset](#bank-offset)
-        * [Bank offset 0](#bank-offset-0)
-      * [Other bank offsets](#other-bank-offsets)
+    * [Chunk Rules](#chunk-rules)
+      * [IENC Chunk Requirements](#ienc-chunk-requirements)
+      * [IPIC Chunk Requirements](#ipic-chunk-requirements)
+      * [DBNK Chunk](#dbnk-chunk)
+  * [Bank Offset](#bank-offset)
+    * [Bank offset 0](#bank-offset-0)
+    * [Other bank offsets](#other-bank-offsets)
     * [Program and Bank Correction](#program-and-bank-correction)
-    * [Software Requirements](#software-requirements)
-      * [Level 1](#level-1)
-      * [Level 2](#level-2)
-      * [Level 3](#level-3)
-      * [Level 4](#level-4)
-    * [Recommendations for Writing RMIDI Files](#recommendations-for-writing-rmidi-files)
-    * [Example Files](#example-files)
-    * [Reference Implementation](#reference-implementation)
+  * [Software Requirements](#software-requirements)
+    * [Level 1](#level-1)
+    * [Level 2](#level-2)
+    * [Level 3](#level-3)
+    * [Level 4](#level-4)
+  * [Recommendations for Writing RMIDI Files](#recommendations-for-writing-rmidi-files)
+  * [Example Files](#example-files)
+  * [Reference Implementation](#reference-implementation)
 <!-- TOC -->
 
-## Specification
-### Terminology
+## Terminology
 This specification assumes familiarity with the SoundFont2 format and the Standard MIDI File (SMF) format. 
 Additional terminology used in this specification includes:
 
@@ -67,11 +65,11 @@ Additional terminology used in this specification includes:
 - **Encoding**: Assigning numbers to graphical characters.
 - **ASCII**: American Standard Code for Information Interchange, a character encoding standard for electronic communication.
 
-### Extension
+## Extension
 The file extension is `.rmi`, and the MIME type is `audio/rmid`. 
 The file type should be referred to as `MIDI with embedded SF2` or `Embedded MIDI`.
 
-### RIFF Chunk
+## RIFF Chunk
 The RMIDI format uses RIFF chunks to structure the data.
 
 Each RIFF chunk in an RMIDI file follows this format:
@@ -87,7 +85,7 @@ Each RIFF chunk in an RMIDI file follows this format:
 > **IMPORTANT:** 
 > This constraint applies only to RIFF chunks within the RMIDI file and does not affect RIFF chunks *within* the soundfont chunk.
 
-### RMID File Structure
+# SF2 RMIDI File Specification
 An RMIDI file consists of:
 - `RIFF` chunk (main chunk)
   - `RMID` ASCII string
@@ -99,7 +97,7 @@ An RMIDI file consists of:
     The first four bytes of this chunk should be `sfbk`, indicating a soundfont. 
   [SoundFont3 format](https://github.com/FluidSynth/fluidsynth/wiki/SoundFont3Format) is allowed.
 
-#### Handling Differences
+### Handling Differences
 When the file structure deviates from the above:
 1. Any additional chunks should be ignored and preserved as-is.
 2. If the chunk order differs from this specification, the file should be rejected. 
@@ -108,7 +106,7 @@ While software may support arbitrary chunk orders, compliance with this specific
 4. If the soundfont bank uses the older DLS format, software not capable of reading DLS should reject the file. 
 Software that supports DLS should use the contained DLS and assume a bank offset of 0, ignoring the DBNK chunk.
 
-### INFO Chunk
+## INFO Chunk
 The INFO chunk describes file metadata and the soundfont's bank offset and follows these rules:
 - Any additional RIFF chunks within the INFO chunk should be ignored and preserved as-is.
 - The chunk size must be even, as specified in the general RIFF structure.
@@ -135,7 +133,7 @@ Below are the defined chunks containing additional information about the song:
 - `IENG` chunk: Engineer (soundfont creator). String of any length.
 - `ISFT` chunk: Software used to create the file. String of any length.
 
-#### Chunk Rules
+### Chunk Rules
 The following rules apply to the INFO chunk:
 1. The order of chunks in INFO is arbitrary.
 2. Chunks of length 0 should be discarded.
@@ -145,7 +143,7 @@ The following rules apply to the INFO chunk:
 6. If the software can display the song's name, it should use either the track name in MIDI or the INAM chunk, preferring the INAM chunk.
 7. Compatible software may ignore all INFO chunks **except the DBNK chunk** to remain compliant.
 
-### IENC Chunk Requirements
+#### IENC Chunk Requirements
 For Level 3 compatibility, software must support the following encodings (both lowercase and uppercase):
 - `utf-8`
 - `shift-jis` or `Shift_JIS` (equivalent encodings)
@@ -161,14 +159,14 @@ For Level 3 compatibility, software must support the following encodings (both l
 
 Software may decode other encodings but is not required to.
 
-### IPIC Chunk Requirements
+#### IPIC Chunk Requirements
 For Level 4 compatibility, software must support the following image formats:
 - Portable Network Graphics (PNG)
 - Joint Photographic Experts Group (JPEG)
 
 Other formats (e.g., `gif`, `webp`, `ico`) may also be supported but are not required.
 
-### DBNK Chunk
+#### DBNK Chunk
 The DBNK chunk is an optional RIFF chunk within the RMIDI INFO List.
 
 It always has a length of two bytes,
@@ -181,10 +179,10 @@ If no DBNK is specified, an offset of **1** is assumed by default.
 
 For general use, a bank offset of 0 is recommended as it allows bundling the soundfont and the MIDI without modification.
 
-#### Bank Offset
+## Bank Offset
 The bank offset adjusts every bank in the soundfont, except for bank 128.
 
-##### Bank offset 0
+### Bank offset 0
 A bank offset of 0 has a few special characteristics:
 1. If the software has a main soundfont, presets in the embedded soundfont override the main presets.
 2. On drum channels, the bank is 0. For XG MIDIs, drum channels use bank 127.
@@ -192,7 +190,7 @@ A bank offset of 0 has a few special characteristics:
 4. If the selected bank has not been found, the channel should fall back to the first preset with the given program number of the embedded soundfont, rather than the main one.
 5. If the selected program has not been found, the channel should fall back to the first preset of the embedded soundfont, rather than the main one.
 
-#### Other bank offsets
+### Other bank offsets
 For example, for the bank offset of 1, the following rules apply:
 1. Every bank in the soundfont is incremented by 1.
 2. For drums, the bank is 1.
@@ -217,36 +215,36 @@ The system cannot be GM since the bank is ignored.
 GS or XG are valid.
 This requires sanitizing the MIDI and setting either GS or XG at the start.
 
-### Software Requirements
+## Software Requirements
 Not all chunks in the file must be read for the file to play correctly. Software compatibility with the RMIDI format is categorized into levels:
 
-#### Level 1
+### Level 1
 Basic RMIDI compatibility. The software must:
 - Read and interpret the `RMID` ASCII string as the file indicator.
 - Handle the `data` chunk containing the MIDI data.
 - Process the `DBNK` chunk within the INFO chunk and correctly offset the soundfont (or a bank select messages in the MIDI) based on this value.
 - Read the `RIFF` chunk with the soundfont data.
 
-#### Level 2
+### Level 2
 This level requires basic interpretation of the `INFO` chunk. The software must:
 - Read all Level 1 chunks.
 - Interpret all metadata chunks (`INAM`, `IPRD`, `ICRD`, `ICOP`, etc.) as `ASCII` or `utf-8`.
 
-#### Level 3
+### Level 3
 This level requires support for the `IENC` chunk. The software must:
 - Read all Level 1 and Level 2 chunks.
 - Interpret the `IENC` chunk and support the [required encodings](#ienc-chunk-requirements).
 
 As of 2024-08-07, Falcosoft Midi Player meets this level of compatibility.
 
-#### Level 4
+### Level 4
 This level requires support for the `IPIC` chunk. The software must:
 - Read all Level 1, Level 2, and Level 3 chunks.
 - Interpret the `IPIC` chunk and support the [required image formats](#ipic-chunk-requirements).
 
 As of 2024-08-06, SpessaSynth meets this level of compatibility.
 
-### Recommendations for Writing RMIDI Files
+## Recommendations for Writing RMIDI Files
 The following recommendations are not required for file validity but are advised:
 1. Trim the soundfont to include only presets used in the file.
 2. Ensure the MIDI file references used banks and programs to avoid undefined behavior from missing presets.
@@ -256,11 +254,11 @@ The following recommendations are not required for file validity but are advised
 6. Use the `utf-8` encoding for the metadata chunks.
 7. Omit metadata chunks rather than writing them with a length of 0 if not applicable.
 
-### Example Files
+## Example Files
 The directory [examples](examples) contains RMIDI Files for testing.
 Some contain offsets, some don't contain the DBNK chunk, and some contain everything, including the album cover.
 
-### Reference Implementation
+## Reference Implementation
 Below is SpessaSynth's implementation of the format in JavaScript, which may be useful for developers:
 
 - [Loading the file](https://github.com/spessasus/SpessaSynth/blob/7e49fd5da62e433a3414bbc24bf012e9af96e84b/src/spessasynth_lib/midi_parser/midi_loader.js#L63)
