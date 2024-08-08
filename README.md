@@ -1,7 +1,7 @@
 # Official SF2 RMIDI Specification
 
 ## Preamble
-MIDI files have long faced a significant challenge: **different sounds on different devices.**
+MIDI files have long-faced a significant challenge: **different sounds on different devices.**
 
 SF2 + MIDI combinations address this issue partially by ensuring that playing both files through an SF2-compliant synth results in the same sound being produced. 
 The RMIDI format is not new; it was originally developed by Microsoft as a RIFF wrapper for MIDI files and later expanded by the MIDI Manufacturers Association to support embedding DLS soundfonts.
@@ -41,6 +41,7 @@ If you find any part of this specification unclear, please reach out via [this t
       * [Level 3](#level-3)
       * [Level 4](#level-4)
     * [Recommendations for Writing RMIDI Files](#recommendations-for-writing-rmidi-files)
+    * [Example Files](#example-files)
     * [Reference Implementation](#reference-implementation)
 <!-- TOC -->
 
@@ -73,8 +74,8 @@ The file type should be referred to as `MIDI with embedded SF2` or `Embedded MID
 The RMIDI format uses RIFF chunks to structure the data.
 
 Each RIFF chunk in an RMIDI file follows this format:
-- 4 bytes: Chunk header in ASCII (e.g., `RIFF`)
-- 4 bytes: Chunk size as a 32-bit unsigned little-endian number
+- Four bytes: Chunk header in ASCII (e.g., `RIFF`)
+- Four bytes: Chunk size as a 32-bit unsigned little-endian number
 - Chunk data: Optionally, the first 4 bytes of the data represent the chunk type in ASCII (e.g., `sfbk`)
 
 > **NOTE:**
@@ -93,7 +94,9 @@ An RMIDI file consists of:
   - Optional `LIST` chunk: Metadata for the file, similar to SF2's chunk
     - `INFO` ASCII string
     - [Inner chunks described here](#info-chunk)
-  - `RIFF` chunk: Complete soundfont binary. The first 4 bytes of this chunk should be `sfbk`, indicating a soundfont. SF3 compressed soundfonts are allowed.
+  - `RIFF` chunk: Complete soundfont binary.
+    The first four bytes of this chunk should be `sfbk`, indicating a soundfont. 
+  [SoundFont3 format](https://github.com/FluidSynth/fluidsynth/wiki/SoundFont3Format) is allowed.
 
 #### Handling Differences
 When the file structure deviates from the above:
@@ -159,8 +162,9 @@ Other formats (e.g., `gif`, `webp`, `ico`) may also be supported but are not req
 ### DBNK Chunk
 The DBNK chunk is an optional RIFF chunk within the RMIDI INFO List.
 
-It always has a length of 2 bytes, with these bytes forming a 16-bit unsigned little-endian offset for the soundfont banks. 
-If the chunk's length is not 2 bytes or the number is out of range, the file should be rejected.
+It always has a length of two bytes,
+with these bytes forming a 16-bit unsigned little-endian offset for the soundfont banks. 
+If the chunk's length is not two bytes or the number is out of range, the file should be rejected.
 
 Current boundaries are: **min: 0** and **max: 127**. 
 The other byte is reserved for future use. 
@@ -180,25 +184,29 @@ A bank offset of 0 has a few special characteristics:
 5. If the selected program has not been found, the channel should fall back to the first preset of the embedded soundfont, rather than the main one.
 
 #### Other bank offsets
-For example, bank offset of 1 means:
+For example, for the bank offset of 1, the following rules apply:
 1. Every bank in the soundfont is incremented by 1.
 2. For drums, the bank is 1.
 For XG MIDIs drum behavior is undefined; the software might expect bank 1 or bank 127. 
 Using a bank offset of 0 in that case is recommended and defined.
-3. The MIDI file must reflect the change as well: all bank selects are incremented by 1 when compared to the original composition.
+3. The MIDI file must reflect the change as well: all bank select messages are incremented by 1 when compared to the original composition.
 4. The MIDI must use valid banks and presets, 
-as the software may fall back to the main soundfont instead of defaulting to preset 0 of the embedded soundfont.
+as the software may fall back to the main soundfont
+   instead of defaulting to the first preset of the embedded soundfont.
 Missing presets in the MIDI sequence is undefined and should be avoided.
 5. The system cannot be GM since the bank is ignored. GS or XG are valid. This requires sanitizing the MIDI and setting either GS or XG at the start.
 
 For a DBNK value of 0, only constraint 3 applies.
 
 The MIDI file must reflect this shift:
-- For example, if DBNK is 1 and the MIDI requests preset 001:080, it should call bank select 2 instead of 1.
+- For example, if DBNK is 1 and the MIDI requests preset 001:080, it should call a bank select message 2 instead of 1.
 - If DBNK is 0, no offset is applied, and the MIDI remains unchanged.
 
 ### Program and Bank Correction
-As stated in constraint 3, the MIDI must use valid banks and presets, as the software may fallback to the loaded soundfont instead of defaulting to preset 0 of the embedded soundfont. The system cannot be GM since the bank is ignored. GS or XG are valid. This requires sanitizing the MIDI and setting either GS or XG at the start.
+As stated in constraint 3, the MIDI must use valid banks and presets.
+The system cannot be GM since the bank is ignored.
+GS or XG are valid.
+This requires sanitizing the MIDI and setting either GS or XG at the start.
 
 ### Software Requirements
 Not all chunks in the file must be read for the file to play correctly. Software compatibility with the RMIDI format is categorized into levels:
@@ -207,7 +215,7 @@ Not all chunks in the file must be read for the file to play correctly. Software
 Basic RMIDI compatibility. The software must:
 - Read and interpret the `RMID` ASCII string as the file indicator.
 - Handle the `data` chunk containing the MIDI data.
-- Process the `DBNK` chunk within the INFO chunk and correctly offset the soundfont (or bank selects in the MIDI) based on this value.
+- Process the `DBNK` chunk within the INFO chunk and correctly offset the soundfont (or a bank select messages in the MIDI) based on this value.
 - Read the `RIFF` chunk with the soundfont data.
 
 #### Level 2
@@ -236,6 +244,10 @@ The following recommendations are not required for file validity but are advised
 3. Always include the DBNK chunk, even if the offset is 1.
 4. Include the IENC chunk to ensure correct encoding is used.
 5. Omit metadata chunks rather than writing them with a length of 0 if not applicable.
+
+### Example Files
+The directory [examples](examples) contains RMIDI Files for testing.
+Some contain offsets, some don't contain the DBNK chunk, and some contain everything, including the album cover.
 
 ### Reference Implementation
 Below is SpessaSynth's implementation of the format in JavaScript, which may be useful for developers:
