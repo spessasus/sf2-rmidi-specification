@@ -18,6 +18,7 @@ I am in contact with Zoltán,
 who <a href="https://www.vogons.org/viewtopic.php?p=1282710#p1282710">granted permission</a> to use this as the official specification. 
 
 If you find any part of this specification unclear, please reach out via <a href="https://www.vogons.org/viewtopic.php?p=1281224">this thread</a> or file a <a href="https://github.com/spessasus/sf2-rmidi-specification/issues/new">GitHub issue</a> in this repository.
+Also feel free to report any issues such as typos or expansions to this standard!
 </p>
 
 ## Table of Contents
