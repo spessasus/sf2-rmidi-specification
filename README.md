@@ -13,7 +13,7 @@ This document serves as the official specification for this format.
 This version of RMIDI was created by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu) and implemented in [Falcosoft SoundFont Midi Player 6](https://falcosoft.hu/softwares.html#midiplayer). 
 I am in contact with Zoltán, who [granted permission](https://www.vogons.org/viewtopic.php?p=1282710#p1282710) to use this as the official specification.
 
-If you find any part of this specification unclear, please reach out via [this thread](https://www.vogons.org/viewtopic.php?p=1281224) or file a GitHub issue in this repository.
+If you find any part of this specification unclear, please reach out via [this thread](https://www.vogons.org/viewtopic.php?p=1281224) or file a [GitHub issue](https://github.com/spessasus/sf2-rmidi-specification/issues/new) in this repository.
 
 ## Table of Contents
 <!-- TOC -->
