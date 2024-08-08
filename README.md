@@ -24,6 +24,7 @@ If you find any part of this specification unclear, please reach out via [this t
   * [Extension](#extension)
   * [RIFF Chunk](#riff-chunk)
 * [SF2 RMIDI File Specification](#sf2-rmidi-file-specification)
+  * [File Structure](#file-structure)
     * [Handling Differences](#handling-differences)
   * [INFO Chunk](#info-chunk)
     * [Metadata Chunks](#metadata-chunks)
@@ -86,6 +87,7 @@ Each RIFF chunk in an RMIDI file follows this format:
 > This constraint applies only to RIFF chunks within the RMIDI file and does not affect RIFF chunks *within* the soundfont chunk.
 
 # SF2 RMIDI File Specification
+## File Structure
 An RMIDI file consists of:
 - `RIFF` chunk (main chunk)
   - `RMID` ASCII string
