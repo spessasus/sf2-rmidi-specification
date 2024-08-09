@@ -2,7 +2,7 @@
 Original format idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), further expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Version 1.12
+Version 1.13
 ## Preamble
 
 <p align="justify">
@@ -43,7 +43,7 @@ Also feel free to report any issues such as typos or expansions to this standard
     * [Bank offset 0](#bank-offset-0)
     * [Other bank offsets](#other-bank-offsets)
     * [Program and Bank Correction](#program-and-bank-correction)
-    * [Loop points](#loop-points)
+  * [Loop points](#loop-points)
   * [Software Requirements](#software-requirements)
     * [Level 1](#level-1)
     * [Level 2](#level-2)
@@ -68,6 +68,10 @@ Additional terminology used in this specification includes:
 - **RIFF**: Resource Interchange File Format. A file container format for storing data in tagged chunks.
 - **Chunk**: The top-level division of a RIFF file.
 - **Little Endian**: Byte ordering in memory with the least significant byte at the lowest address.
+- **MIDI:** Musical Instrument Digital Interface. a technical standard that describes a communication protocol for a wide variety of electronic musical devices.
+- **MIDI file/SMF:** Standard MIDI File. A sequence of MIDI messages, usually a song.
+- **Note On:** A MIDI message indicating that a given note should be pressed.
+- **Note Off:** A MIDI message indicating that a given note should be released.
 - **GM**: General MIDI system, ignoring all Bank select messages.
 - **XG**: Yamaha eXtended General MIDI, an extension to the General MIDI standard created by Yamaha.
 - **GS**: Roland General Standard, an extension to the General MIDI standard created by Roland.
@@ -225,21 +229,31 @@ The system cannot be GM since the bank is ignored.
 GS or XG are valid.
 This requires sanitizing the MIDI and setting either GS or XG at the start.
 
-### Loop points
+## Loop points
 As there are many implementations of loop points within various MIDI files and none of them are standardized,
 this section of the document describes the recommended loop point behavior for the SF2 RMIDI format:
 
-1. Loop points are defined using Controller Change messages within the embeded MIDI data. These loop points apply to the entire file, regardless of the MIDI channel the messages are in.
-2. If loop points are present in the file, 
-there must always be an even number of them (two points make one loop).
-If that's not the case, all loop points must be rejected.
-There's one exception to this contstraint: if one loop start point is specified without a loop end point, 
-the last voice message is assumed to be the loop end point.
-3. Start loop point is defined using CC#116. The controller value specifies the number of loops for this loop point pair. A value of zero is equivalent to infinite.
-4. End loop point is defined using CC#117. The controller value is not used, but setting it to value of 127 is recommended.
-5. Overlapping (nesting) loops is ILLEGAL. If any nested loops are encountered, all loops within the file must be rejected.
-6. If a start loop point does not have a matching loop end point, all loop points in the file must be rejected. The special case described in rule 2 is not affected by this constraint.
-7. If any other non-standard type of loop point is detected within the file while the standardized loop points are present, the software must use the standardized loop points.
+1. Loop points are optional. 
+   If there are none, the file should be played normally.
+   If the software's loop mode is enabled, 
+   it should default to the first Note On as start point,
+   and last note Off message as the end point.
+2. Loop points are defined using Controller Change messages within the embeded MIDI data. 
+   These loop points apply to the entire file, regardless of the MIDI channel the messages are in.
+3. If loop points are present in the file, 
+   there must always be an even number of them (two points make one loop).
+   If that's not the case, all loop points must be rejected.
+   There's one exception to this contstraint: if one loop start point is specified without a loop end point, 
+   the last Note Off message is assumed to be the loop end point.
+4. Start loop point is defined using CC#116.
+   The controller value specifies the number of loops for this loop point pair.
+   A value of zero is equivalent to infinite.
+5. End loop point is defined using CC#117. The controller value is not used, but setting it to value of 127 is recommended.
+6. Overlapping (nesting) loops is ILLEGAL. If any nested loops are encountered, all loops within the file must be rejected.
+7. If a start loop point does not have a matching loop end point, all loop points in the file must be rejected. 
+   This constraint does not affect the special case described in rule 2.
+8. If any other non-standard type of loop point is detected within the file while the standardized loop points are present, 
+   the software must use the standardized loop points.
 
 All SF2 RMIDI compatible players with loop point capability should support these.
 The software can support other, non-standard loop points; it is not required.
