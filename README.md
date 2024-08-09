@@ -2,7 +2,7 @@
 Original format idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), further expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Version 1.13
+Revision 1.14
 ## Preamble
 
 <p align="justify">
@@ -243,19 +243,18 @@ this section of the document describes the recommended loop point behavior for t
 3. If loop points are present in the file, 
    there must always be an even number of them (two points make one loop).
    If that's not the case, all loop points must be rejected.
-   There's one exception to this contstraint: if one loop start point is specified without a loop end point, 
-   the last Note Off message is assumed to be the loop end point.
 4. Start loop point is defined using CC#116.
    The controller value specifies the number of loops for this loop point pair.
    A value of zero is equivalent to infinite.
 5. End loop point is defined using CC#117. The controller value is not used, but setting it to value of 127 is recommended.
 6. Overlapping (nesting) loops is ILLEGAL. If any nested loops are encountered, all loops within the file must be rejected.
-7. If a start loop point does not have a matching loop end point, all loop points in the file must be rejected. 
-   This constraint does not affect the special case described in rule 2.
+7. If a start loop point does not have a matching loop end point, all loop points in the file must be rejected.
 8. If any other non-standard type of loop point is detected within the file while the standardized loop points are present, 
    the software must use the standardized loop points.
 
 All SF2 RMIDI compatible players with loop point capability should support these.
+If the software writing an RMIDI file has detected loop points in the original file,
+it should translate them to this standardized format.
 The software can support other, non-standard loop points; it is not required.
 
 ## Software Requirements
