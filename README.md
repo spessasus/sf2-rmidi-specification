@@ -43,13 +43,13 @@ Also feel free to report any issues such as typos or expansions to this standard
   * [Bank Offset](#bank-offset)
     * [Bank offset 0](#bank-offset-0)
     * [Other bank offsets](#other-bank-offsets)
-    * [Self-Contained File](#self-contained-file)
   * [Loop points](#loop-points)
   * [Software Requirements](#software-requirements)
     * [Level 1](#level-1)
     * [Level 2](#level-2)
     * [Level 3](#level-3)
     * [Level 4](#level-4)
+  * [Self-Contained File](#self-contained-file)
   * [Recommendations for Writing RMIDI Files](#recommendations-for-writing-rmidi-files)
   * [Example Files](#example-files)
   * [Reference Implementation](#reference-implementation)
@@ -227,16 +227,6 @@ The MIDI file must reflect this bank shift:
 - For example, if DBNK is 1 and the original MIDI requests preset 001:080, it should call a bank select message 2 instead of 1.
 - If DBNK is 0, no offset is applied, and the MIDI remains unchanged.
 
-### Self-Contained File
-A self-contained file is defined as a SF2 RMIDI file which only refers to its own SoundFont bank,  
-and the said bank contains **all and only** the necessary presets to play the file.
-
-As such,
-the MIDI file must be checked by the software
-writing the file for any program changes that do not have a corresponding preset within the sound bank and correct them.
-The software also must remove all unnecessary samples, 
-instruments and presets from the sound bank to keep the file size to a minimum.
-
 ## Loop points
 As there are many implementations of loop points within various MIDI files and none of them are standardized,
 this section of the document describes the recommended loop point behavior for the SF2 RMIDI format:
@@ -292,6 +282,17 @@ This level requires support for the `IPIC` chunk. The software must:
 - Interpret the `IPIC` chunk and support the [required image formats](#ipic-chunk-requirements).
 
 As of 2024-08-06, SpessaSynth meets this level of compatibility.
+
+## Self-Contained File
+A self-contained file is defined as a SF2 RMIDI file which only refers to its own SoundFont bank,  
+and the said bank contains **all and only** the necessary presets to play the file.
+Writing self-contained RMIDI files is recommended, but not required.
+
+As such,
+the MIDI file must be checked by the software
+writing the file for any program changes that do not have a corresponding preset within the sound bank and correct them.
+The software also must remove all unnecessary samples,
+instruments and presets from the sound bank to keep the file size to a minimum.
 
 ## Recommendations for Writing RMIDI Files
 The following recommendations are not required for file validity but are advised:
