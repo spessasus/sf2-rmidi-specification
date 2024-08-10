@@ -81,8 +81,9 @@ Additional terminology used in this specification includes:
 - **ASCII**: American Standard Code for Information Interchange, a character encoding standard for electronic communication.
 
 ## Extension
-The file extension is `.rmi`, and the MIME type is `audio/rmid`. 
-The file type should be referred to as `MIDI with embedded SF2` or `Embedded MIDI`.
+The file extension is `.rmi`, and the MIME type is `audio/rmid`.
+Optionally the extension might be `.sfmi` to help distinguish between the older RMIDI format.
+The file type should be referred to as `MIDI with embedded SF2`, `Embedded MIDI` or `SF2 RMIDI`.
 
 ## RIFF Chunk
 The RMIDI format uses RIFF chunks to structure the data.
