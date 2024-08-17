@@ -51,7 +51,7 @@ Also feel free to report any issues such as typos or expansions to this standard
     * [Level 4](#level-4)
   * [Types of RMIDI Files](#types-of-rmidi-files)
     * [Self-Contained File](#self-contained-file)
-    * [External File](#external-fole)
+    * [External File](#external-file)
   * [Recommendations for Writing RMIDI Files](#recommendations-for-writing-rmidi-files)
   * [Example Files](#example-files)
   * [Reference Implementation](#reference-implementation)
