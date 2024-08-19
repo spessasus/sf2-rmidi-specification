@@ -2,7 +2,7 @@
 Original format idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), further expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Revision 1.15
+Revision 1.16
 ## Preamble
 
 <p align="justify">
@@ -306,7 +306,11 @@ The following recommendations are not required for file validity but are advised
 
 ## Example Files
 The directory [examples](examples) contains RMIDI Files for testing.
-Some contain offsets, some don't contain the DBNK chunk, and some contain everything, including the album cover.
+
+- `Field of Hopes and Dreams` - complete, level 4, self-contained file with IPIC chunk and metadata. Offset 0. Uses SF3 compression.
+- `GRABBAG_EmbeddedSF2` - self-contained file with no `DBNK` chunk. Offset 1.
+- `offset_5` - self-contained file with offset of 5.
+- `Rock_test` - external file with no `DBNK` chunk. Offset 1, expects a full GM sound bank loaded at bank 0.
 
 ## Reference Implementation
 Below is SpessaSynth implementation of the format in JavaScript, which may be useful for developers:
