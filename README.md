@@ -49,7 +49,9 @@ Also feel free to report any issues such as typos or expansions to this standard
     * [Level 2](#level-2)
     * [Level 3](#level-3)
     * [Level 4](#level-4)
-  * [Self-Contained File](#self-contained-file)
+  * [Types of RMIDI Files](#types-of-rmidi-files)
+    * [Self-Contained File](#self-contained-file)
+    * [External File](#external-file)
   * [Recommendations for Writing RMIDI Files](#recommendations-for-writing-rmidi-files)
   * [Example Files](#example-files)
   * [Reference Implementation](#reference-implementation)
@@ -209,18 +211,19 @@ A bank offset of 0 has a few special characteristics:
 2. On drum channels, the bank is to be ignored for GM/GS MIDIs. For XG MIDIs, drum channels, bank 127 indicates a drum channel.
 3. The MIDI file can use the GM system and not contain any bank selects at all.
 4. If the selected bank has not been found, the channel should fall back to the first preset with the given program number of the embedded soundfont, rather than the main one.
-5. If the selected program has not been found, the channel should fall back to the first preset of the embedded soundfont, rather than the main one.
+5. If the selected program has not been found, the channel should fall back to the main soundfont. If the software does not have a Main soundfont loaded, the channel should fall back to the first preset within the embedded soundfont.
+6. If the program has not been found within the main soundfont, the program should fall back to the first preset of the main soundfont.
 
 ### Other bank offsets
 For example, for the bank offset of 1, the following rules apply:
-1. Every bank in the soundfont is incremented by 1.
+1. Every bank in the embedded SoundFont is incremented by 1.
 2. For drums, the bank is 1.
 For XG MIDIs drum behavior is undefined; the software might expect bank 1 or bank 127. 
 Using a bank offset of 0 in that case is recommended and defined.
 3. The MIDI file must reflect the change as well: all bank select messages are incremented by 1 when compared to the original composition.
 4. If the MIDI file references a bank and program combination does not exist within the embedded SoundFont bank, 
 the software should use the first preset with the given program number in the embedded SoundFont bank.
-5. If the MIDI file references a program that does not exist within the embedded SoundFont bank, the software should fall back to the main SoundFont bank.
+5. If the MIDI file references a program that does not exist within the embedded SoundFont bank, the software should fall back to the main sound bank.
 6. The system cannot be GM since the bank is ignored. GS or XG are valid. This requires sanitizing the MIDI and setting either GS or XG at the start.
 
 
@@ -284,9 +287,14 @@ This level requires support for the `IPIC` chunk. The software must:
 
 As of 2024-08-06, SpessaSynth meets this level of compatibility.
 
-## Self-Contained File
+## Types of RMIDI Files
+There are currently two distinct types of RMIDI files which vary in their use cases.
+
+### Self-Contained File
 A self-contained file is defined as a SF2 RMIDI file which only refers to its own SoundFont bank,  
 and the said bank contains **all and only** the necessary presets to play the file.
+It is recommended to use DBNK of 0 for writing such files, but it is not required.
+
 Writing self-contained RMIDI files is recommended, but not required.
 
 As such,
@@ -295,14 +303,22 @@ writing the file for any program changes that do not have a corresponding preset
 The software also must remove all unnecessary samples,
 instruments and presets from the sound bank to keep the file size to a minimum.
 
+### External File
+An external file is defined as a SF2 RMIDI file which relies on a complete sound bank loaded as a fallback with the embedded sound bank only containing special sound effects, specific to the file.
+
+The software not capable of loading two sound banks at once (the main one and the embedded one) may reject the file.
+
+This type of file usually uses bank 1 or greater, but it may use bank 0.
+
 ## Recommendations for Writing RMIDI Files
 The following recommendations are not required for file validity but are advised:
-1. Trim the soundfont to include only presets used in the file.
-2. Ensure the MIDI file references used banks and programs to avoid undefined behavior from missing presets.
+1. Trim the soundfont to include only presets used in the file to save space.
+2. Write a self-contained file to ensure that it will sound the same in every software.
 3. Always include the DBNK chunk, even if the offset is 1.
 4. Include the IENC chunk to ensure correct encoding is used.
 5. Include the MENC chunk if the encoding is known, to help other software read the MIDI text events correctly.
 6. Use the `utf-8` encoding for the metadata chunks.
+7. Use SoundFont3 compression if available to save space.
 
 ## Example Files
 The directory [examples](examples) contains RMIDI Files for testing.
