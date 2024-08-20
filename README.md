@@ -2,7 +2,7 @@
 Original format idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), further expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Revision 1.16
+Revision 1.17
 ## Preamble
 
 <p align="justify">
@@ -122,7 +122,7 @@ When the file structure deviates from the above:
 2. If the chunk order differs from this specification, the file should be rejected.
 3. If no soundfont bank is present, the file should use the main soundfont and assume a bank offset of 0, ignoring the DBNK chunk.
 4. If the soundfont bank uses the older DLS format, software not capable of reading DLS should reject the file. 
-Software that supports DLS should use the contained DLS and assume a bank offset of 0, ignoring the DBNK chunk.
+Software that supports DLS should use the contained DLS and assume a bank offset of **1**, ignoring the DBNK chunk.
 
 The last two rules ensure backwards compatibility with the older RMIDI format.
 
@@ -147,7 +147,7 @@ Below are the defined chunks containing additional information about the song:
 - `ICOP` chunk: Copyright. String of any length.
 - `IART` chunk: Artist (MIDI creator). String of any length.
 - `ICRD` chunk: Creation date. String of any length.
-- `IPRD` chunk: Album name. String of any length.
+- `IPRD` or `IALB` chunk: Album name. String of any length. Can be used interchangeably. If both exist in the file, the software should use `IALB`.
 - `IPIC` chunk: Attached picture (e.g., album cover). Binary picture data. PNG or JPEG recommended.
 - `IGNR` chunk: Song genre. String of any length.
 - `ICMT` chunk: Comment/description. String of any length.
@@ -222,9 +222,8 @@ For XG MIDIs drum behavior is undefined; the software might expect bank 1 or ban
 Using a bank offset of 0 in that case is recommended and defined.
 3. The MIDI file must reflect the change as well: all bank select messages are incremented by 1 when compared to the original composition.
 4. If the MIDI file references a bank and program combination does not exist within the embedded SoundFont bank, 
-the software should use the first preset with the given program number in the embedded SoundFont bank.
-5. If the MIDI file references a program that does not exist within the embedded SoundFont bank, the software should fall back to the main sound bank.
-6. The system cannot be GM since the bank is ignored. GS or XG are valid. This requires sanitizing the MIDI and setting either GS or XG at the start.
+the software should fall back to the main sound bank and use it as normal.
+5. The system cannot be GM since the bank is ignored. GS or XG are valid. This requires sanitizing the MIDI and setting either GS or XG at the start.
 
 
 The MIDI file must reflect this bank shift:
