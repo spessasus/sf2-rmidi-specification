@@ -286,6 +286,8 @@ This level requires support for the `IPIC` chunk. The software must:
 
 As of 2024-08-06, SpessaSynth meets this level of compatibility.
 
+As of 2024-08-20, foo_midi meets this level of compatibility.
+
 ## Types of RMIDI Files
 There are currently two distinct types of RMIDI files which vary in their use cases.
 
