@@ -2,7 +2,7 @@
 Original format idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), further expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Revision 1.17
+Revision 1.18
 ## Preamble
 
 <p align="justify">
@@ -31,8 +31,10 @@ Also feel free to report any issues such as typos or expansions to this standard
   * [Terminology](#terminology)
   * [Extension](#extension)
   * [RIFF Chunk](#riff-chunk)
+    * [Example chunk](#example-chunk)
 * [SF2 RMIDI File Specification](#sf2-rmidi-file-specification)
   * [File Structure](#file-structure)
+    * [Example file](#example-file)
     * [Handling Differences](#handling-differences)
   * [INFO Chunk](#info-chunk)
     * [Metadata Chunks](#metadata-chunks)
@@ -44,6 +46,7 @@ Also feel free to report any issues such as typos or expansions to this standard
     * [Bank offset 0](#bank-offset-0)
     * [Other bank offsets](#other-bank-offsets)
   * [Loop points](#loop-points)
+  * [Player pseudo code](#player-pseudo-code)
   * [Software Requirements](#software-requirements)
     * [Level 1](#level-1)
     * [Level 2](#level-2)
@@ -66,9 +69,10 @@ Additional terminology used in this specification includes:
 - **Byte**: A data structure element of eight bits, with no defined meaning to those bits.
 - **SoundFont**: A [SoundFont2](https://musescore.org/sites/musescore.org/files/2023-01/sfspec24.pdf) compliant binary.
 - **DLS**: DownLoadable Sounds. Sound bank format similar to SoundFont. Used in the older RMIDI files, not compliant with this specification.
-- **Embedded SoundFont:** The SoundFont bank embedded in an RMIDI file.
-- **Main SoundFont:** The regular SoundFont bank loaded by the software prior to loading the RMIDI file.
-- **Bank**: MIDI controller 0 `Bank Select MSB` and the bank number of a soundfont preset.
+- **Embedded SoundFont:** The SoundFont bank embedded within an RMIDI file.
+- **Main SoundFont:** The regular SoundFont bank loaded by the software before loading the RMIDI file.
+- **Bank**: MIDI controller 0 `Bank Select MSB` and the bank number of a SoundFont preset. It's a 7-bit value, except for the SoundFont's drum presets, which use bank number 128.
+- **Bank offset:** The number which gets added to each preset's wBank field within the embedded SoundFont.
 - **RIFF**: Resource Interchange File Format. A file container format for storing data in tagged chunks.
 - **Chunk**: The top-level division of a RIFF file.
 - **Little Endian**: Byte ordering in memory with the least significant byte at the lowest address.
@@ -103,6 +107,14 @@ Each RIFF chunk in an RMIDI file follows this format:
 > **IMPORTANT:** 
 > This constraint applies only to RIFF chunks within the RMIDI file and does not affect RIFF chunks *within* the soundfont chunk.
 
+### Example chunk
+`82 69 70 70 05 00 00 00 72 65 6C 6C 6F 00`
+
+- `82 69 70 70` - ASCII string "RIFF"
+- `05 00 00 00` - 32-bit chunk length: 5
+- `72 65 6C 6C 6F` - the chunk's data: ASCII string "Hello"
+- `00` - a pad byte of 0 to make the total byte count even.
+
 # SF2 RMIDI File Specification
 ## File Structure
 An RMIDI file consists of:
@@ -115,6 +127,32 @@ An RMIDI file consists of:
   - `RIFF` chunk: Complete soundfont binary.
     The first four bytes of this chunk should be `sfbk`, indicating a soundfont2 binary. 
   [SoundFont3 format](https://github.com/FluidSynth/fluidsynth/wiki/SoundFont3Format) is allowed.
+  
+### Example file
+- `RIFF` chunk
+  - `RMID` ASCII string
+  - `data` - The MIDI file data: MThd, MTrk etc...
+  - `LIST`
+    - `INFO` ASCII string
+    - `INAM` chunk
+      - `Never Gonna Give You Up` UTF-8 string
+    - `IART` chunk
+      - `Rick Astley` UTF-8 string
+    - `ICRD` chunk
+      - `1987` UTF-8 string
+    - `IENC` chunk
+      - `utf-8` ASCII string
+    - `DBNK` chunk
+      - 16-bit integer: 1
+  - `RIFF` chunk - the SoundFont binary: `sfbk`, `LIST`, `sdta` etc...
+
+The following file structure shows that:
+1. The bank offset is 1.
+2. Info chunks are encoded using `UTF-8` encoding.
+3. The song's title is "Never Gonna Give You Up."
+4. The song's artist is "Rick Astley."
+5. The song's creation date is "1987."
+6. The song has an embedded sound bank.
 
 ### Handling Differences
 When the file structure deviates from the above:
@@ -122,7 +160,10 @@ When the file structure deviates from the above:
 2. If the chunk order differs from this specification, the file should be rejected.
 3. If no soundfont bank is present, the file should use the main soundfont and assume a bank offset of 0, ignoring the DBNK chunk.
 4. If the soundfont bank uses the older DLS format, software not capable of reading DLS should reject the file. 
-Software that supports DLS should use the contained DLS and assume a bank offset of **1**, ignoring the DBNK chunk.
+
+Software that supports DLS should use the contained DLS
+and assume a bank offset of **1** or try to detect the bank offset
+since the older format does not specify the `DBNK` chunk.
 
 The last two rules ensure backwards compatibility with the older RMIDI format.
 
@@ -147,7 +188,7 @@ Below are the defined chunks containing additional information about the song:
 - `ICOP` chunk: Copyright. String of any length.
 - `IART` chunk: Artist (MIDI creator). String of any length.
 - `ICRD` chunk: Creation date. String of any length.
-- `IPRD` or `IALB` chunk: Album name. String of any length. Can be used interchangeably. If both exist in the file, the software should use `IALB`.
+- `IPRD` or `IALB` chunk: Album name. String of any length. It can be used interchangeably. If both exist in the file, the software should use `IALB`.
 - `IPIC` chunk: Attached picture (e.g., album cover). Binary picture data. PNG or JPEG recommended.
 - `IGNR` chunk: Song genre. String of any length.
 - `ICMT` chunk: Comment/description. String of any length.
@@ -190,49 +231,55 @@ Other formats (e.g., `gif`, `webp`, `ico`) may also be supported but are not req
 #### DBNK Chunk
 The DBNK chunk is an optional RIFF chunk within the RMIDI INFO List.
 
+It describes the **bank offset** for the embedded sound bank.
+
 It always has a length of two bytes,
-with these bytes forming a **16-bit, unsigned, little-endian** offset for the soundfont banks. 
+with these bytes forming a **16-bit, unsigned, little-endian** number. 
 If the chunk's length is not two bytes or the number is out of range, the file should be rejected.
 
 Current boundaries are: **minimum: 0** and **maximum: 127**. 
 The other byte is reserved for future use. 
+
 If no DBNK is specified, an offset of **1** is assumed by default.
-If the file is not an SF2 RMIDI file (doesn't contain a sound bank or contains DLS), 
-an offset of 0 is assumed and DBNK is to be ignored.
+If the file does not contain any Sound bank (SF2 or DLS), the offset shall default to 0.
 
 For general use, a bank offset of 0 is recommended as it allows bundling the soundfont and the MIDI without modification.
 
 ## Bank Offset
-The bank offset adjusts every bank in the soundfont, except for bank 128.
+The bank offset adjusts every bank in the soundfont,
+except for bank 128 by adding itself to the soundFont's `wBank` field.
+
+For example,
+if a preset named `Acoustic Piano 2` with program 0 and bank 1 exists within an RMIDI file which uses bank offset of 1,
+it should effectively be interpreted as program 0 and bank 2.
+If a preset named `Standard Drum Kit` exists within the same file with program 0 and bank 128,
+the bank will remain 128.
+
+If the resulting value exceeds 128 or is smaller than 0, then it should be turned into 0.
 
 ### Bank offset 0
 A bank offset of 0 has a few special characteristics:
 1. If the software has a main soundfont, presets in the embedded soundfont override the main presets.
 2. On drum channels, the bank is to be ignored for GM/GS MIDIs. For XG MIDIs, drum channels, bank 127 indicates a drum channel.
-3. The MIDI file can use the GM system and not contain any bank selects at all.
-4. If the selected bank has not been found, the channel should fall back to the first preset with the given program number of the embedded soundfont, rather than the main one.
-5. If the selected program has not been found, the channel should fall back to the main soundfont. If the software does not have a Main soundfont loaded, the channel should fall back to the first preset within the embedded soundfont.
-6. If the program has not been found within the main soundfont, the program should fall back to the first preset of the main soundfont.
+3. If the selected bank has not been found, the channel should fall back to the first preset with the given program number of the embedded soundfont, rather than the main one.
+4. If the selected program has not been found, the channel should fall back to the main soundfont. If the software does not have a Main soundfont loaded, the channel should fall back to the first preset within the embedded soundfont.
+5. If the program has not been found within the main soundfont, the program should fall back to the first preset of the main soundfont.
 
 ### Other bank offsets
-For example, for the bank offset of 1, the following rules apply:
-1. Every bank in the embedded SoundFont is incremented by 1.
-2. For drums, the bank is 1.
-For XG MIDIs drum behavior is undefined; the software might expect bank 1 or bank 127. 
+For the bank offset of X, the following rules apply:
+1. Every bank in the embedded SoundFont is incremented by X.
+2. For drums, the bank is X.
+For XG MIDIs drum behavior is **undefined**; the software might expect bank X or bank 127. 
 Using a bank offset of 0 in that case is recommended and defined.
-3. The MIDI file must reflect the change as well: all bank select messages are incremented by 1 when compared to the original composition.
-4. If the MIDI file references a bank and program combination does not exist within the embedded SoundFont bank, 
+3. If the MIDI file references a bank and program combination does not exist within the embedded SoundFont bank, 
 the software should fall back to the main sound bank and use it as normal.
-5. The system cannot be GM since the bank is ignored. GS or XG are valid. This requires sanitizing the MIDI and setting either GS or XG at the start.
-
-
-The MIDI file must reflect this bank shift:
-- For example, if DBNK is 1 and the original MIDI requests preset 001:080, it should call a bank select message 2 instead of 1.
-- If DBNK is 0, no offset is applied, and the MIDI remains unchanged.
+4. The system cannot be GM since the bank is ignored. GS or XG are valid. This requires sanitizing the MIDI and setting either GS or XG at the start.
 
 ## Loop points
 As there are many implementations of loop points within various MIDI files and none of them are standardized,
 this section of the document describes the recommended loop point behavior for the SF2 RMIDI format:
+
+The software is NOT REQUIRED to support MIDI looping, but it is recommended.
 
 1. Loop points are optional. 
    If there are none, the file should be played normally.
@@ -253,9 +300,52 @@ this section of the document describes the recommended loop point behavior for t
 8. If any other non-standard type of loop point is detected within the file while the standardized loop points are present, 
    the software must use the standardized loop points.
 
-All SF2 RMIDI compatible players with loop point capability should support these.
 If the software writing an RMIDI file has detected loop points in the original file,
 it should translate them to this standardized format.
+
+## Player pseudo code
+Below is a simple JavaScript-like code for a Level 1 RMIDI-compatible player.
+
+Note: this code does not perform any checks and assumes that the file is valid and contains all three chunks.
+```js
+const file = open("song.rmi");
+// read RIFF
+const chunk = readRIFF(file);
+// skip 'RMID' string
+chunk.data.seek(chunk.data.position + 4);
+// read 'data' chunk
+const midiChunk = readRIFF(chunk.data);
+const midiFile = midiChunk.data;
+
+// read the 'LIST' INFO chunk
+const info = readRIFF(chunk.data);
+// skip the 'INFO' string
+const infoString = info.data.seek(info.data.position + 4);
+const infoList = readLIST(info.data);
+
+// bank offset is 1 by default
+let bankOffset = 1;
+// if DBNK exists
+if(infoList.find(i => i.header === "DBNK")) {
+    // DBNK is 2 bytes signed int 16
+    bankOffset = infoList["DBNK"].toSignedInt16();
+}
+
+// read the sound bank (not as a riff chunk but copy the binary content)
+const soundFont = chunk.slice(chunk.data.position, chunk.data.length - chunk.data.position);
+
+// initialize the synthesizer
+const player = new Player(soundFont);
+
+// adjust bank offset
+for(const preset of player.soundFont.presets)
+{
+    preset.bankNumber += bankOffset;
+}
+
+// play the song
+player.play(midiFile);
+```
 
 ## Software Requirements
 Not all chunks in the file must be read for the file to play correctly. Software compatibility with the RMIDI format is categorized into levels:
@@ -289,7 +379,9 @@ As of 2024-08-06, SpessaSynth meets this level of compatibility.
 As of 2024-08-20, foo_midi meets this level of compatibility.
 
 ## Types of RMIDI Files
-There are currently two distinct types of RMIDI files which vary in their use cases.
+There are currently two distinct types of RMIDI files that vary in their use cases.
+
+Note that these have identical file structure; these vary only in the way they provide sounds for the sequence.
 
 ### Self-Contained File
 A self-contained file is defined as a SF2 RMIDI file which only refers to its own SoundFont bank,  
@@ -332,6 +424,6 @@ The directory [examples](examples) contains RMIDI Files for testing.
 ## Reference Implementation
 Below is SpessaSynth implementation of the format in JavaScript, which may be useful for developers:
 
-- [Loading the file](https://github.com/spessasus/SpessaSynth/blob/7e49fd5da62e433a3414bbc24bf012e9af96e84b/src/spessasynth_lib/midi_parser/midi_loader.js#L63)
+- [Loading the file](https://github.com/spessasus/SpessaSynth/blob/master/src/spessasynth_lib/midi_parser/midi_loader.js)
 - [Writing the file](https://github.com/spessasus/SpessaSynth/blob/master/src/spessasynth_lib/midi_parser/rmidi_writer.js)
 - [Decoding and displaying the metadata](https://github.com/spessasus/SpessaSynth/blob/4243af6711261ba62ae78d8d1db532f2b766be75/src/website/js/music_mode_ui/music_mode_ui.js#L155)
