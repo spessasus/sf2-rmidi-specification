@@ -108,11 +108,11 @@ Each RIFF chunk in an RMIDI file follows this format:
 > This constraint applies only to RIFF chunks within the RMIDI file and does not affect RIFF chunks *within* the soundfont chunk.
 
 ### Example chunk
-`82 69 70 70 05 00 00 00 72 65 6C 6C 6F 00`
+`52 49 46 46 05 00 00 00 48 65 6C 6C 6F 00`
 
-- `82 69 70 70` - ASCII string "RIFF"
+- `52 49 46 46` - ASCII string "RIFF"
 - `05 00 00 00` - 32-bit chunk length: 5
-- `72 65 6C 6C 6F` - the chunk's data: ASCII string "Hello"
+- `48 65 6C 6C 6F` - the chunk's data: ASCII string "Hello"
 - `00` - a pad byte of 0 to make the total byte count even.
 
 # SF2 RMIDI File Specification
