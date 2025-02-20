@@ -1,8 +1,10 @@
-# Official SF2 RMIDI Specification
-Original format idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), further expanded by spessasus.
+# SF2 RMIDI Format Extension Specification
+Original format was created by Microsoft and later expanded by the MIDI Manufacturers Association.
+
+Original format expansion idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), later expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Revision 1.19
+Revision 1.20
 ## Preamble
 
 <p align="justify">
@@ -13,20 +15,28 @@ The RMIDI format is not new; it was originally developed by Microsoft as a RIFF 
 and later expanded by the MIDI Manufacturers Association to support embedding DLS sound banks.
 However, DLS is not widely used today, whereas the SoundFont2 (SF2) format serves a similar purpose and remains quite popular.
 The SF2 RMIDI format integrates MIDI and SF2 files into a single file, augmented with additional metadata. 
-This document serves as the official specification for this format.
+This document serves as a specification for this format extension.
 This version of RMIDI was created by Zoltán Bacskó of <a href="https://falcosoft.hu">Falcosoft</a>
 and implemented in <a href="https://falcosoft.hu/softwares.html#midiplayer">Falcosoft SoundFont Midi Player 6.</a> 
 I am in contact with Zoltán,
-who <a href="https://www.vogons.org/viewtopic.php?p=1282710#p1282710">granted permission</a> to use this as the official specification. 
+who <a href="https://www.vogons.org/viewtopic.php?p=1282710#p1282710">granted permission</a> for me to write this specification. 
 
 If you find any part of this specification unclear, please reach out via <a href="https://www.vogons.org/viewtopic.php?p=1281224">this thread</a> or file a <a href="https://github.com/spessasus/sf2-rmidi-specification/issues/new">GitHub issue</a> in this repository.
-Also feel free to report any issues such as typos or expansions to this standard!
+Also feel free to report any issues such as typos or expansions!
 </p>
+
+## Design Goals
+This extension has been designed with the following goals in mind:
+- legacy compatibility with the original RMIDI format
+- easy adaptation for existing software
+- support for modern SoundFont2 files
+- expanded metadata support
 
 ## Table of Contents
 <!-- TOC -->
-* [Official SF2 RMIDI Specification](#official-sf2-rmidi-specification)
+* [SF2 RMIDI Format Extension Specification](#sf2-rmidi-format-extension-specification)
   * [Preamble](#preamble)
+  * [Design Goals](#design-goals)
   * [Table of Contents](#table-of-contents)
   * [Terminology](#terminology)
   * [Extension](#extension)
@@ -56,6 +66,7 @@ Also feel free to report any issues such as typos or expansions to this standard
   * [Recommendations for Writing RMIDI Files](#recommendations-for-writing-rmidi-files)
   * [Example Files](#example-files)
   * [Reference Implementation](#reference-implementation)
+  * [Legal Notice](#legal-notice)
 <!-- TOC -->
 
 ## Terminology
@@ -85,25 +96,18 @@ Additional terminology used in this specification includes:
 - **ASCII**: American Standard Code for Information Interchange, a character encoding standard for electronic communication.
 
 ## Extension
-The file extension is `.rmi`, and the MIME type is `audio/rmid`.
-Optionally the extension might be `.sfmi` to help distinguish between the older RMIDI format.
+The file extension is `.rmi`.
 The file type should be referred to as `MIDI with embedded SF2`, `Embedded MIDI` or `SF2 RMIDI`.
 
 ## RIFF Chunk
 The RMIDI format uses RIFF chunks to structure the data.
 
+The RIFF format is unchanged from the original RMIDI format. Described here for completeness.
+
 Each RIFF chunk in an RMIDI file follows this format:
 - Four bytes: Chunk header in ASCII (e.g., `RIFF`)
 - Four bytes: Chunk size as a 32-bit unsigned little-endian number
 - Chunk data: Optionally, the first 4 bytes of the data represent the chunk type in ASCII (e.g., `sfbk`)
-
-> **NOTE:**
-> The chunk size **must be even.** 
-> If the initial chunk data is odd, a padding byte of 0 must be added at the end. 
-> The chunk's length **does not** include this padding byte.
-
-> **IMPORTANT:** 
-> This constraint applies only to RIFF chunks within the RMIDI file and does not affect RIFF chunks *within* the soundfont chunk.
 
 ### Example chunk
 `52 49 46 46 05 00 00 00 48 65 6C 6C 6F 00`
@@ -123,8 +127,10 @@ An RMIDI file consists of:
     - `INFO` ASCII string
     - [Inner chunks described here](#info-chunk)
   - `RIFF` chunk: Complete soundfont binary.
+  It is optional.
     The first four bytes of this chunk should be `sfbk`, indicating a soundfont2 binary. 
   [SoundFont3 format](https://github.com/FluidSynth/fluidsynth/wiki/SoundFont3Format) is allowed.
+  Note that for legacy files, it may instead be a DLS file.
   
 ### Example file
 - `RIFF` chunk
@@ -142,7 +148,7 @@ An RMIDI file consists of:
       - `utf-8` ASCII string
     - `DBNK` chunk
       - 16-bit integer: 1
-  - `RIFF` chunk - the SoundFont binary: `sfbk`, `LIST`, `sdta` etc...
+  - `RIFF` chunk - the SoundFont binary file.
 
 The following file structure shows that:
 1. The bank offset is 1.
@@ -251,7 +257,10 @@ temporarily replacing given MIDI program and bank numbers with the presets conta
 The bank offset adjusts every bank in the embedded sound bank
 **except for bank 128** by adding itself to every patch's `wBank` field.
 
-For example,
+For files without an embedded sound bank,
+ the bank offset is ignored and assumed to be 0, regardless of the DBNK chunk if present.
+
+For example:
 - If a preset named `Acoustic Piano 2` with program 0 and bank 1 exists within an RMIDI file which uses bank offset of 1,
 it should effectively be interpreted as program 0 and bank 2.
 
@@ -318,6 +327,8 @@ Minimum requirements for the software to be compliant. The software must:
 - Handle the `data` chunk containing the MIDI data.
 - Process the `DBNK` chunk within the INFO chunk and correctly offset the soundfont (or a bank select messages in the MIDI) based on this value.
 - Read the `RIFF` chunk with the soundfont data.
+
+This level ensures the correct playback and is recommended for software that does not need to support metadata.
 
 ### Level 2
 This level requires basic interpretation of the `INFO` chunk. The software must:
@@ -389,3 +400,13 @@ Below is SpessaSynth implementation of the format in JavaScript, which may be us
 - [Writing the file](https://github.com/spessasus/SpessaSynth/blob/master/src/spessasynth_lib/midi_parser/rmidi_writer.js)
   - [Removing unused samples from the SoundFont](https://github.com/spessasus/SpessaSynth/blob/master/src/spessasynth_lib/soundfont/basic_soundfont/write_sf2/soundfont_trimmer.js)
 - [Decoding and displaying the metadata](https://github.com/spessasus/SpessaSynth/blob/4243af6711261ba62ae78d8d1db532f2b766be75/src/website/js/music_mode_ui/music_mode_ui.js#L155)
+
+## Legal Notice
+This document is in no way endorsed or otherwise affiliated with the MIDI Manufacturers Association,
+ Microsoft,
+ Creative Technology Ltd. or E-mu Systems, Inc.,
+  or any other organization mentioned in this document.
+  
+SoundFont® is a registered trademark of Creative Technology Ltd.
+
+All other trademarks are the property of their respective owners.
