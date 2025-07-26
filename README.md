@@ -4,7 +4,7 @@ Original format was created by Microsoft and later expanded by the MIDI Manufact
 Original format expansion idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), later expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Revision 1.20
+Revision 1.21
 ## Preamble
 
 <p align="justify">
@@ -396,10 +396,10 @@ Software not capable of reading DLS should reject this file.
 ## Reference Implementation
 Below is SpessaSynth implementation of the format in JavaScript, which may be useful for developers:
 
-- [Loading the file](https://github.com/spessasus/SpessaSynth/blob/master/src/spessasynth_lib/midi_parser/midi_loader.js)
-- [Writing the file](https://github.com/spessasus/SpessaSynth/blob/master/src/spessasynth_lib/midi_parser/rmidi_writer.js)
-  - [Removing unused samples from the SoundFont](https://github.com/spessasus/SpessaSynth/blob/master/src/spessasynth_lib/soundfont/basic_soundfont/write_sf2/soundfont_trimmer.js)
-- [Decoding and displaying the metadata](https://github.com/spessasus/SpessaSynth/blob/4243af6711261ba62ae78d8d1db532f2b766be75/src/website/js/music_mode_ui/music_mode_ui.js#L155)
+- [Loading the file](https://github.com/spessasus/spessasynth_core/blob/a7537f850110cc345a9484c081bf77a25422d9dd/src/midi/midi_loader.js#L45-L145)
+- [Writing the file](https://github.com/spessasus/spessasynth_core/blob/a7537f850110cc345a9484c081bf77a25422d9dd/src/midi/midi_tools/rmidi_writer.js)
+- [Removing unused samples from a sound bank](https://github.com/spessasus/spessasynth_core/blob/a7537f850110cc345a9484c081bf77a25422d9dd/src/soundfont/basic_soundfont/basic_soundbank.js#L386-L576)
+- [Decoding and displaying the metadata](https://github.com/spessasus/SpessaSynth/blob/ba099282680300c8e7c1ef4cf58e565f92f32c67/src/website/js/music_mode_ui/music_mode_ui.js#L125-L183)
 
 ## Legal Notice
 This document is in no way endorsed or otherwise affiliated with the MIDI Manufacturers Association,
