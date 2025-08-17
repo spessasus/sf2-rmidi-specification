@@ -195,18 +195,20 @@ Below are the defined chunks containing additional information about the song:
 - `ICMT` chunk: Comment/description. String of any length.
 - `IENG` chunk: Engineer (soundfont creator). String of any length.
 - `ISFT` chunk: Software used to create the file. String of any length.
+- `ISBJ` chunk: Subject of the file. String of any length.
 
 ### Chunk Rules
 The following rules apply to the INFO chunk:
 1. The order of chunks within the INFO chunk is arbitrary.
-2. Chunks of length 0 are illegal and should be discarded.
-3. Unknown INFO chunks should be ignored and preserved as-is.
-4. If the `IENC` chunk is not specified, the software can use any encoding, but assuming `utf-8` is recommended.
-5. If the `MENC` chunk is not specified, the software decides MIDI's encoding.
-6. If the software can display the song's name, it should use the INAM chunk if present, ignoring the MIDI track name.
-7. Compatible software may ignore all INFO chunks **except the DBNK chunk** for the most basic [level of compatibility](#level-1).
-8. The chunk size must be even, as specified in the general RIFF structure.
-9. The INFO chunk is optional. The software must not assume that the INFO chunk exists.
+2. Text chunks must contain a terminal zero byte.
+3. Chunks of length 0 are illegal and should be discarded.
+4. Unknown INFO chunks should be ignored and preserved as-is.
+5. If the `IENC` chunk is not specified, the software can use any encoding, but assuming `utf-8` is recommended.
+6. If the `MENC` chunk is not specified, the software decides MIDI's encoding.
+7. If the software can display the song's name, it should use the INAM chunk if present, ignoring the MIDI track name.
+8. Compatible software may ignore all INFO chunks **except the DBNK chunk** for the most basic [level of compatibility](#level-1).
+9. The chunk size must be even, as specified in the general RIFF structure.
+10. The INFO chunk is optional. The software must not assume that the INFO chunk exists.
 
 #### IENC Chunk Requirements
 For Level 3 compatibility, software must support the following encodings (both lowercase and uppercase):
