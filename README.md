@@ -4,7 +4,7 @@ Original format was created by Microsoft and later expanded by the MIDI Manufact
 Original format expansion idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), later expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Revision 1.21
+Revision 1.22
 ## Preamble
 
 <p align="justify">
@@ -188,7 +188,7 @@ Below are the defined chunks containing additional information about the song:
 - `INAM` chunk: Song name/title. String of any length.
 - `ICOP` chunk: Copyright. String of any length.
 - `IART` chunk: Artist (MIDI creator). String of any length.
-- `ICRD` chunk: Creation date. String of any length.
+- `ICRD` chunk: Creation date. String of any length. **The software must write the date as an ISO 8601 date or date time string.** For example `2025-08-17` or `2025-08-17T19:15:25Z`.  This allows software to parse the date and display it in a different way or use it for management purposes.
 - `IPRD` or `IALB` chunk: Album name. String of any length. It can be used interchangeably. If both exist in the file, the software should use `IALB`.
 - `IPIC` chunk: Attached picture (e.g., album cover). Binary picture data. PNG or JPEG recommended.
 - `IGNR` chunk: Song genre. String of any length.
