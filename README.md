@@ -4,7 +4,7 @@ Original format was created by Microsoft and later expanded by the MIDI Manufact
 Original format expansion idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), later expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Revision 1.22
+Revision 1.23
 ## Preamble
 
 <p align="justify">
@@ -54,7 +54,7 @@ This extension has been designed with the following goals in mind:
       * [DBNK Chunk](#dbnk-chunk)
   * [Embedded sound bank](#embedded-sound-bank)
     * [Bank Offset](#bank-offset)
-  * [Player pseudo code](#player-pseudo-code)
+  * [Player pseudo-code](#player-pseudo-code)
   * [Software Requirements](#software-requirements)
     * [Level 1](#level-1)
     * [Level 2](#level-2)
@@ -143,7 +143,7 @@ An RMIDI file consists of:
     - `IART` chunk
       - `Rick Astley` UTF-8 string
     - `ICRD` chunk
-      - `1987` UTF-8 string
+      - `1987-07-27` UTF-8 string
     - `IENC` chunk
       - `utf-8` ASCII string
     - `DBNK` chunk
@@ -155,7 +155,7 @@ The following file structure shows that:
 2. Info chunks are encoded using `UTF-8` encoding.
 3. The song's title is "Never Gonna Give You Up."
 4. The song's artist is "Rick Astley."
-5. The song's creation date is "1987."
+5. The song's creation date is 27 July 1987.
 6. The song has an embedded sound bank.
 
 ### Handling Differences
@@ -188,7 +188,8 @@ Below are the defined chunks containing additional information about the song:
 - `INAM` chunk: Song name/title. String of any length.
 - `ICOP` chunk: Copyright. String of any length.
 - `IART` chunk: Artist (MIDI creator). String of any length.
-- `ICRD` chunk: Creation date. String of any length. **The software must write the date as an ISO 8601 date or date time string.** For example `2025-08-17` or `2025-08-17T19:15:25Z`.  This allows software to parse the date and display it in a different way or use it for management purposes.
+- `ICRD` chunk: Creation date. String of any length. **The software must write the date as an ISO 8601 date or date time string.** 
+For example `2025-08-17` or `2025-08-17T19:15:25Z`. This allows software to parse the date and display it in a different way or use it for management purposes. Software may ignore the time and only parse the date.
 - `IPRD` or `IALB` chunk: Album name. String of any length. It can be used interchangeably. If both exist in the file, the software should use `IALB`.
 - `IPIC` chunk: Attached picture (e.g., album cover). Binary picture data. PNG or JPEG recommended.
 - `IGNR` chunk: Song genre. String of any length.
@@ -209,6 +210,7 @@ The following rules apply to the INFO chunk:
 8. Compatible software may ignore all INFO chunks **except the DBNK chunk** for the most basic [level of compatibility](#level-1).
 9. The chunk size must be even, as specified in the general RIFF structure.
 10. The INFO chunk is optional. The software must not assume that the INFO chunk exists.
+11. If the `ICRD` chunk contains a date not formatted as ISO 8601, the software may attempt to parse it, or reject it and present the file with no date.
 
 #### IENC Chunk Requirements
 For Level 3 compatibility, software must support the following encodings (both lowercase and uppercase):
@@ -272,7 +274,7 @@ the bank will remain 128.
 If the resulting bank number exceeds 127 (except for drum kits) or is smaller than 0, then it should be turned into 0.
 
 
-## Player pseudo code
+## Player pseudo-code
 Below is a simple JavaScript-like code for a Level 1 RMIDI-compatible player.
 
 Note: this code does not perform any checks and assumes that the file is valid and contains all three chunks,
