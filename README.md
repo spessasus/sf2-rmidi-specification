@@ -4,7 +4,7 @@ Original format was created by Microsoft and later expanded by the MIDI Manufact
 Original format expansion idea by Zoltán Bacskó of [Falcosoft](https://falcosoft.hu), later expanded by spessasus.
 Specification written by spessasus with the help of Zoltán.
 
-Revision 1.23
+Revision 1.24
 ## Preamble
 
 <p align="justify">
@@ -81,7 +81,7 @@ Additional terminology used in this specification includes:
 - **Embedded sound bank:** The sound bank embedded within an RMIDI file that is used for playing back the sequence.
 - **Main SoundFont:** The regular SoundFont bank loaded by the software before loading the RMIDI file.
 - **Bank**: MIDI controller 0 `Bank Select MSB` and the bank number of a SoundFont preset. It's a 7-bit value, except for the SoundFont's drum presets, which use bank number 128.
-- **Bank offset:** The number which gets added to each wBank field in all presets within the embedded bank.
+- **Bank offset:** The number which gets added to the bank of every preset within the embedded bank, drum kits included. See [Bank Offset](#bank-offset).
 - **RIFF**: Resource Interchange File Format. A file container format for storing data in tagged chunks.
 - **Chunk**: The top-level division of a RIFF file.
 - **Little Endian**: Byte ordering in memory with the least significant byte at the lowest address.
@@ -161,7 +161,8 @@ The following file structure shows that:
 ### Handling Differences
 When the file structure deviates from the above:
 1. Any additional chunks after the specified ones should be ignored and preserved as-is.
-2. If the chunk order differs from this specification, the file should be rejected.
+2. The `data` chunk must come right after the `RMID` string, otherwise the file should be rejected.
+   The chunks after it (`LIST` and the sound bank) may appear in any order.
 3. If no soundfont bank is present, the file should use the main soundfont and assume a bank offset of 0, ignoring the DBNK chunk.
 4. If the soundfont bank uses the older DLS format, software not capable of reading DLS should reject the file. 
 
@@ -242,10 +243,13 @@ It describes the **bank offset** for the embedded sound bank.
 
 It always has a length of two bytes,
 with these bytes forming a **16-bit, unsigned, little-endian** number. 
-If the chunk's length is not two bytes or the number is out of range, the file should be rejected.
 
 Current boundaries are: **minimum: 0** and **maximum: 127**. 
 The other byte is reserved for future use. 
+
+If the chunk's length is not two bytes or the number is out of range,
+the chunk should be ignored, as if it was not present.
+Software writing RMIDI files must only write values within these boundaries.
 
 If no DBNK is specified, an offset of **1** is assumed by default.
 If the file does not contain any Sound bank (SF2 or DLS), the offset shall default to 0.
@@ -258,8 +262,13 @@ This sound bank provides the exclusive sounds used within the MIDI sequence,
 temporarily replacing given MIDI program and bank numbers with the presets contained within the sound bank.
 
 ### Bank Offset
-The bank offset adjusts every bank in the embedded sound bank
-**except for bank 128** by adding itself to every patch's `wBank` field.
+The bank offset adjusts every preset in the embedded sound bank,
+by adding itself to the bank number used to select the preset.
+
+For melodic presets, the offset is added to the `wBank` field.
+Drum kits (`wBank` 128) stay as drum kits, but the offset is added to the Bank Select MSB that selects them on a drum channel.
+Drum kits are normally selected with Bank Select MSB of 0, 
+so with an offset they are selected with Bank Select MSB equal to the offset.
 
 For files without an embedded sound bank,
  the bank offset is ignored and assumed to be 0, regardless of the DBNK chunk if present.
@@ -269,9 +278,11 @@ For example:
 it should effectively be interpreted as program 0 and bank 2.
 
 - If a preset named `Standard Drum Kit` exists within the same RMIDI file with program 0 and bank 128,
-the bank will remain 128.
+it is selected on a drum channel with Bank Select MSB 1 and program 0.
+Bank Select MSB 0 on that channel selects the drum kit from the main sound bank instead.
 
-If the resulting bank number exceeds 127 (except for drum kits) or is smaller than 0, then it should be turned into 0.
+If the resulting bank number exceeds 127, the preset cannot be selected and should be ignored.
+Software writing RMIDI files must choose an offset that keeps every preset within range.
 
 
 ## Player pseudo-code
@@ -297,14 +308,16 @@ const infoList = readLIST(info.data);
 
 // bank offset is 1 by default
 let bankOffset = 1;
-// if DBNK exists
-if(infoList.find(infoChunk => infoChunk.header === "DBNK")) {
-    // DBNK is 2 bytes signed int 16
-    bankOffset = infoList["DBNK"].toSignedInt16();
+const dbnk = infoList.find(infoChunk => infoChunk.header === "DBNK");
+// if a valid DBNK exists
+if(dbnk && dbnk.length === 2) {
+    // DBNK is 2 bytes unsigned int 16
+    const value = dbnk.toUnsignedInt16();
+    // out of range values are ignored
+    if(value <= 127) {
+        bankOffset = value;
+    }
 }
-
-// clamp the bank offset
-bankOffset = Math.min(Math.max(0, bankOffset), 127);
 
 // read the sound bank (not as a riff chunk but copy the binary content)
 const soundFont = chunk.slice(chunk.data.position, chunk.data.length - chunk.data.position);
@@ -315,7 +328,9 @@ const player = new Player(soundFont);
 // adjust bank offset
 for(const preset of player.soundFont.presets)
 {
-    preset.bankNumber += bankOffset;
+    // bankSelect is the Bank Select MSB that selects this preset (0 for drum kits)
+    // drum kits get the offset too
+    preset.bankSelect += bankOffset;
 }
 
 // play the song
@@ -398,12 +413,13 @@ Software not capable of reading DLS should reject this file.
 
 
 ## Reference Implementation
-Below is SpessaSynth implementation of the format in JavaScript, which may be useful for developers:
+Below is SpessaSynth implementation of the format in TypeScript, which may be useful for developers:
 
-- [Loading the file](https://github.com/spessasus/spessasynth_core/blob/a7537f850110cc345a9484c081bf77a25422d9dd/src/midi/midi_loader.js#L45-L145)
-- [Writing the file](https://github.com/spessasus/spessasynth_core/blob/a7537f850110cc345a9484c081bf77a25422d9dd/src/midi/midi_tools/rmidi_writer.js)
-- [Removing unused samples from a sound bank](https://github.com/spessasus/spessasynth_core/blob/a7537f850110cc345a9484c081bf77a25422d9dd/src/soundfont/basic_soundfont/basic_soundbank.js#L386-L576)
-- [Decoding and displaying the metadata](https://github.com/spessasus/SpessaSynth/blob/ba099282680300c8e7c1ef4cf58e565f92f32c67/src/website/js/music_mode_ui/music_mode_ui.js#L125-L183)
+- [Loading the file](https://github.com/spessasus/spessasynth_core/blob/master/src/midi/read/rmidi.ts)
+- [Writing the file](https://github.com/spessasus/spessasynth_core/blob/master/src/midi/write/rmidi.ts)
+- [Applying the bank offset](https://github.com/spessasus/spessasynth_core/blob/master/src/synthesizer/audio_engine/sound_bank_manager.ts)
+- [Removing unused samples from a sound bank](https://github.com/spessasus/spessasynth_core/blob/master/src/soundbank/basic_soundbank/basic_soundbank.ts) (the `trim` method)
+- [Decoding and displaying the metadata](https://github.com/spessasus/SpessaSynth/blob/master/src/website/js/music_mode_ui/music_mode_ui.ts)
 
 ## Legal Notice
 This document is in no way endorsed or otherwise affiliated with the MIDI Manufacturers Association,
